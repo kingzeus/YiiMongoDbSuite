@@ -11,6 +11,14 @@ class MongoModelCode extends CCodeModel
 	public $mongoCollectionName;
 	public $modelPath='application.models';
 	public $baseClass='EMongoDocument';
+    /**
+     * @var string The path of the base model.
+     */
+    public $baseModelPath;
+    /**
+     * @var string The base model class name.
+     */
+    public $baseModelClass;
 
 	/**
 	 * @var array list of candidate relation code. The array are indexed by AR class names and relation names.
@@ -105,10 +113,20 @@ class MongoModelCode extends CCodeModel
 				'relations'=>isset($this->relations[$className]) ? $this->relations[$className] : array(),
 				'primaryKey'=>$table->primaryKey,
 			);
+            // Setup base model information.
+            $this->baseModelPath = $this->modelPath . '._base';
+            $this->baseModelClass = 'Base' . $className;
+
 			$this->files[]=new CCodeFile(
 				Yii::getPathOfAlias($this->modelPath).'/'.$className.'.php',
 				$this->render($templatePath.'/model.php', $params)
 			);
+
+            // Generate the base model.
+            $this->files[] = new CCodeFile(
+                Yii::getPathOfAlias($this->baseModelPath . '.' . $this->baseModelClass) . '.php',
+                $this->render($templatePath . DIRECTORY_SEPARATOR . '_base' . DIRECTORY_SEPARATOR . 'basemodel.php', $params)
+            );
 		}
 	}
 
@@ -148,16 +166,64 @@ class MongoModelCode extends CCodeModel
 	public function generateLabels($table)
 	{
 		$labels=array();
+		// For the fields.
+		foreach ($table->columns as $column) {
+			if ($column->isForeignKey) {
+				$label = null;
+			} else {
+// 				$label = ucwords(trim(strtolower(str_replace(array('-', '_'), ' ', preg_replace('/(?<![A-Z])[A-Z]/', ' \0', $column->name)))));
+// 				$label = preg_replace('/\s+/', ' ', $label);
+
+// 				if (strcasecmp(substr($label, -3), ' id') === 0)
+// 					$label = substr($label, 0, -3);
+// 				if ($label === 'Id')
+// 					$label = 'ID';
+
+// 				$label = "Yii::t('app', '{$label}')";
+				$label = $table->name.'.'.$column->name;
+				$label = "Yii::t('db', '{$label}')";
+			}
+			$labels[$column->name] = $label;
+		}
+
+        // 保存语言文件
+		$langDir = Yii::getPathOfAlias('application.messages').DIRECTORY_SEPARATOR.Yii::app()->getLanguage().DIRECTORY_SEPARATOR;
+		if(!file_exists($langDir))
+			mkdir($langDir);
+		$messageFile = $langDir.'db.php';
+		if(file_exists($messageFile))
+		{
+			$messages=include($messageFile);
+			if(!is_array($messages))
+				$messages=array();
+		}else{
+			$messages=array();
+		}
+		
 		foreach($table->columns as $column)
 		{
+			if($column->comment)
+				$label=$column->comment;
+			else{
 			$label=ucwords(trim(strtolower(str_replace(array('-','_'),' ',preg_replace('/(?<![A-Z])[A-Z]/', ' \0', $column->name)))));
 			$label=preg_replace('/\s+/',' ',$label);
 			if(strcasecmp(substr($label,-3),' id')===0)
 				$label=substr($label,0,-3);
 			if($label==='Id')
 				$label='ID';
-			$labels[$column->name]=$label;
+			}
+			$key = $table->name.'.'.$column->name;
+			if(!array_key_exists($key, $messages))
+				$messages[$key]=$label;
 		}
+        // 更新数据库翻译文件
+        $messageFileContent="<?php\n// 数据库数据字典\n\n\n\n";
+		$messageFileContent.="return array(\n";
+		foreach ($messages as $key => $value) {
+			$messageFileContent.="    '$key' => '$value',\n";
+		}
+		$messageFileContent.=');';
+		file_put_contents($messageFile, $messageFileContent);
 		return $labels;
 	}
 
