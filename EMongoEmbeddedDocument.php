@@ -269,7 +269,21 @@ abstract class EMongoEmbeddedDocument extends CModel
 		else
 			return self::$_attributes[$className];
 	}
-
+    /**
+     * Gets a document attribute
+     * @param string $name
+     * @return mixed
+     */
+    public function getAttribute($name)
+    {
+        if(property_exists($this, $name)){
+            return $this->$name;
+        }
+        if(isset(self::$_attributes[$name])){
+            return self::$_attributes[$name];
+        }
+        return null;
+    }
 	/**
 	 * Returns the given object as an associative array
 	 * Fires beforeToArray and afterToArray events

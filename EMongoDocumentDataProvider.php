@@ -165,7 +165,17 @@ class EMongoDocumentDataProvider extends CDataProvider
 	{
 		return $this->model->count($this->_criteria);
 	}
-
+	/**
+	 * Returns the sorting object.
+	 * @param string $className the sorting object class name. Parameter is available since version 1.1.13.
+	 * @return CSort the sorting object. If this is false, it means the sorting is disabled.
+	 */
+	public function getSort($className='CSort')
+	{
+	    if(($sort=parent::getSort($className))!==false)
+	        $sort->modelClass=$this->modelClass;
+	    return $sort;
+	}
 	/**
 	 * Converts the "ORDER BY" clause into an array representing the sorting directions.
 	 * @param string $order the "ORDER BY" clause.

@@ -80,4 +80,23 @@ abstract class <?php echo $this->baseModelClass; ?> extends <?php echo $this->ba
 <?php endforeach; ?>
 		);
 	}
+
+	public function search($pagination = array()) {
+		$criteria = new EMongoCriteria;
+
+<?php foreach($columns as $name=>$column): ?>
+        if($this-><?php echo $name; ?>!==null)
+		$criteria->addCond('<?php echo $name; ?>','eq', $this-><?php echo $name; ?>);
+<?php endforeach; ?>
+		
+		$config = array(
+				'criteria' => $criteria,
+			);
+		
+		if(is_array($pagination)&& count($pagination)>0)
+		{
+			$config['pagination'] = $pagination;
+		}
+		return new EMongoDocumentDataProvider($this, $config);
+	}
 }
