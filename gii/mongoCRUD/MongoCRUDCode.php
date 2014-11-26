@@ -175,9 +175,12 @@ class MongoCRUDCode extends CCodeModel
 		return "\$form->labelEx(\$model,'{$name}')";
 	}
 
-	public function generateActiveField($modelClass,$name)
+	public function generateActiveField($modelClass,$name,$htmloptions=null)
 	{
-		return "\$form->textField(\$model,'{$name}')";
+        if($htmloptions===null)
+            return "\$form->textField(\$model,'{$name}')";
+	    else
+	        return "\$form->textField(\$model,'{$name}',{$htmloptions})";
 	}
 
 	/**
