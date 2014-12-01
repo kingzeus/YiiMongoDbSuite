@@ -25,7 +25,7 @@
  * @author canni
  * @since v1.0
  */
-class EMongoDocumentDataProvider extends CDataProvider
+class EMongoDocumentDataProvider extends CActiveDataProvider
 {
 	/**
 	 * @var string the name of key field. Defaults to '_id', as a mongo default document primary key.
