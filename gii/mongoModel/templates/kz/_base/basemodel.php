@@ -85,8 +85,12 @@ abstract class <?php echo $this->baseModelClass; ?> extends <?php echo $this->ba
 		$criteria = new EMongoCriteria;
 
 <?php foreach($columns as $name=>$column): ?>
-        if($this-><?php echo $name; ?>!==null)
-		$criteria->addCond('<?php echo $name; ?>','eq', $this-><?php echo $name; ?>);
+        if($this-><?php echo $name; ?>!==null && strlen($this-><?php echo $name; ?>)>0)
+        <?php if($column->type == 'integer'): ?>
+		  $criteria->addCond('<?php echo $name; ?>','eq',new MongoInt64( $this-><?php echo $name; ?>));
+		<?php else: ?>
+		  $criteria->addCond('<?php echo $name; ?>','eq', $this-><?php echo $name; ?>);
+		<?php endif; ?>
 <?php endforeach; ?>
 		
 		$config = array(
